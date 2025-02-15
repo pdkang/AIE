@@ -1,0 +1,10 @@
+wandb/
+.env
+Demo/
+__pycache__/
+note*.txt
+.venv/
+07_Synthetic_Data_Generation_and_LangSmith/ai_ind_kg.json
+09_Finetuning_Embeddings/finetuned_arctic_ft/
+09_Finetuning_Embeddings/.venv/
+09_Finetuning_Embeddings/data/

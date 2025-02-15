@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.env
+temp_* 
+note.txt
+*.pdf

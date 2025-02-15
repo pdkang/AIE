@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Application</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>RAG Application</h1>
+        
+        <div class="upload-section">
+            <h2>Upload Document</h2>
+            <input type="file" id="fileInput" accept=".txt,.pdf">
+            <button id="uploadButton" onclick="uploadFile()">Upload</button>
+            <span id="uploadSpinner" class="spinner" style="display: none;">Processing...</span>
+        </div>
+
+        <div class="query-section">
+            <h2>Ask a Question</h2>
+            <textarea id="queryInput" placeholder="Enter your question here..."></textarea>
+            <button id="queryButton" onclick="submitQuery()">Submit Query</button>
+            <span id="querySpinner" class="spinner">Processing...</span>
+        </div>
+
+        <div class="response-section">
+            <h2>Response</h2>
+            <div id="answer"></div>
+            <div class="switch-container">
+                <label class="switch">
+                    <input type="checkbox" id="contextToggle" onchange="toggleContext()">
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label">Show Context</span>
+            </div>
+            <div id="contextSection">
+                <h3>Context</h3>
+                <div id="context"></div>
+            </div>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html> 

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .query-section {
+            display: none;
+        }
+        .response-section {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+        .context {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            display: none;
+            margin-left: 10px;
+            color: #007bff;
+        }
+        
+        .loading .spinner {
+            display: inline;
+        }
+
+        /* Radio toggle styles */
+        .toggle-radio {
+            display: none;  /* Initially hidden */
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .toggle-radio input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .toggle-radio label {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        #contextSection {
+            display: none;  /* Initially hidden */
+        }
+
+        /* Initially hide these sections */
+        .query-section,
+        .response-section,
+        .toggle-radio,
+        #contextSection {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RAG Application</h1>
+        
+        <div class="upload-section">
+            <h2>Upload Document</h2>
+            <input type="file" id="fileInput" accept=".txt,.pdf">
+            <button id="uploadButton" onclick="uploadFile()">Upload</button>
+            <span id="uploadSpinner" class="spinner">Processing...</span>
+        </div>
+
+        <div id="querySection" class="query-section">
+            <h2>Ask a Question</h2>
+            <textarea id="queryInput" placeholder="Enter your question here..."></textarea>
+            <button id="queryButton" onclick="submitQuery()">Submit Query</button>
+            <span id="querySpinner" class="spinner">Processing...</span>
+        </div>
+
+        <div id="responseSection" class="response-section">
+            <h2>Response</h2>
+            <div id="answer"></div>
+            
+            <!-- Add radio toggle -->
+            <div class="toggle-radio">
+                <span>Context: </span>
+                <label>
+                    <input type="radio" name="contextToggle" value="show" onchange="toggleContext(this)"> Show
+                </label>
+                <label>
+                    <input type="radio" name="contextToggle" value="hide" onchange="toggleContext(this)" checked> Hide
+                </label>
+            </div>
+            
+            <div id="contextSection">
+                <h3>Context</h3>
+                <div id="context"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSessionId = null;
+
+        function setLoading(isLoading, action) {
+            const button = document.getElementById(action === 'upload' ? 'uploadButton' : 'queryButton');
+            const spinner = document.getElementById(action === 'upload' ? 'uploadSpinner' : 'querySpinner');
+            
+            if (isLoading) {
+                button.classList.add('loading');
+                spinner.style.display = 'inline';
+                button.disabled = true;
+            } else {
+                button.classList.remove('loading');
+                spinner.style.display = 'none';
+                button.disabled = false;
+            }
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file first');
+                return;
+            }
+
+            setLoading(true, 'upload');
+
+            // Hide all sections during upload and processing
+            document.getElementById('querySection').style.display = 'none';
+            document.getElementById('responseSection').style.display = 'none';
+            document.getElementById('contextSection').style.display = 'none';
+            document.querySelector('.toggle-radio').style.display = 'none';
+
+            // Clear any previous content
+            document.getElementById('answer').innerHTML = '';
+            document.getElementById('context').innerHTML = '';
+            document.getElementById('queryInput').value = '';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                currentSessionId = data.session_id;
+                
+                // Only show query section after successful upload
+                document.getElementById('querySection').style.display = 'block';
+                
+                alert('File uploaded successfully! You can now ask questions.');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error uploading file: ' + error.message);
+            } finally {
+                setLoading(false, 'upload');
+            }
+        }
+
+        function toggleContext(radio) {
+            const contextSection = document.getElementById('contextSection');
+            contextSection.style.display = radio.value === 'show' ? 'block' : 'none';
+        }
+
+        async function submitQuery() {
+            if (!currentSessionId) {
+                alert('Please upload a document first');
+                return;
+            }
+
+            const queryInput = document.getElementById('queryInput');
+            const query = queryInput.value.trim();
+            
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+
+            setLoading(true, 'query');
+
+            // Show response section but hide context initially
+            document.getElementById('responseSection').style.display = 'block';
+            document.getElementById('contextSection').style.display = 'none';
+            document.querySelector('.toggle-radio').style.display = 'none';
+            // Reset radio to "Hide"
+            document.querySelector('input[value="hide"]').checked = true;
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                        query: query
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display response
+                document.getElementById('answer').innerHTML = `<p><strong>Answer:</strong> ${data.answer}</p>`;
+                
+                // Handle context display with error checking
+                if (data.context && Array.isArray(data.context)) {
+                    const validContexts = data.context.filter(c => c != null && c !== '');
+                    const contextHtml = validContexts.length > 0 
+                        ? validContexts.join('<br><br>')
+                        : 'No context available';
+                    document.getElementById('context').innerHTML = `<div class="context">${contextHtml}</div>`;
+                    
+                    // Show the radio toggle only after we have a valid response with context
+                    document.querySelector('.toggle-radio').style.display = 'flex';
+                } else {
+                    document.getElementById('context').innerHTML = `<div class="context">No context available</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error submitting query: ' + error.message);
+            } finally {
+                setLoading(false, 'query');
+            }
+        }
+    </script>
+</body>
+</html> 
