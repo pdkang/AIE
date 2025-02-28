@@ -1,0 +1,8 @@
+Retriever,Context Recall,Context Entity Recall,Context Precision,Tokens per Run,Latency (s),Cost ($),Quality Score
+Ensemble Retriever,0.967,0.733,0.697,0.0,0.0,0.0,0.816
+Naive Retriever,0.83,0.722,0.756,3739.0,3.65,0.007,0.775
+Contextual Compression Retriever,0.83,0.652,0.808,0.0,0.0,0.0,0.77
+Semantic Retriever,0.867,0.712,0.643,0.0,0.0,0.0,0.753
+Multi-Query Retriever,0.85,0.623,0.714,0.0,0.0,0.0,0.741
+Parent Document Retriever,0.48,0.515,0.7,0.0,0.0,0.0,0.556
+BM25 Retriever,0.3,0.498,0.142,1432.2,1.8,0.003,0.312

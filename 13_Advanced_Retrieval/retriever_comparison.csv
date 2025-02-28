@@ -1,0 +1,8 @@
+total_tokens,prompt_tokens,completion_tokens,latency_p50,latency_p99,total_cost,prompt_cost,completion_cost,run_count,retriever_type,experiment_name,retriever_name,tokens_per_run,tokens_per_second
+37390,35381,2009,3.65,9.06766,0.006513,0.00530715,0.0012054,10,naive_retrieval_chain,proper-pleasure-59,Naive Retriever,3739.0,1024.38
+14322,12721,1601,1.8,3.63355,0.002869,0.00190815,0.0009606,10,bm25_retrieval_chain,definite-hill-6,BM25 Retriever,1432.2,795.67
+12620,10967,1653,3.39,5.97251,0.002637,0.00164505,0.0009918,10,contextual_compression_retrieval_chain,extraneous-camp-83,Contextual Compression Retriever,1262.0,372.27
+51678,49031,2647,4.56,6.09541,0.008943,0.00735465,0.0015882,10,multi_query_retrieval_chain,only-heart-44,Multi-Query Retriever,5167.8,1133.29
+7106,5812,1294,2.678,5.86659,0.001648,0.0008718,0.0007764,10,parent_document_retrieval_chain,scholarly-history-55,Parent Document Retriever,710.6,265.35
+56330,53571,2759,6.5,17.51468,0.009691,0.00803565,0.0016554,10,ensemble_retrieval_chain,ordinary-pain-15,Ensemble Retriever,5633.0,866.62
+31992,30153,1839,3.142,25.86373,0.005626,0.00452295,0.0011034,10,semantic_retrieval_chain,proper-knowledge-23,Semantic Retriever,3199.2,1018.2
