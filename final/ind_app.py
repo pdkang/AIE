@@ -155,7 +155,7 @@ def init_vector_store(documents: List[Document]):
         st.info("Initializing embedding model...")
         try:
             embedding_model = HuggingFaceBgeEmbeddings(
-                model_name="BAAI/bge-base-en-v1.5",
+                model_name="philipk22/ind312-ft-v0",
                 encode_kwargs={'normalize_embeddings': True}
             )
         except Exception as e:
@@ -374,8 +374,19 @@ class ChecklistCrossReferenceAgent:
         try:
             results = {}
             
-            # Process each checklist item
-            for document_name, document_info in self.checklist.items():
+            # Track which files have been assigned to a document type
+            assigned_files = {}
+            
+            # Sort document types by pattern specificity (longer patterns first)
+            # This ensures more specific document types are matched before generic ones
+            sorted_documents = sorted(
+                self.checklist.items(),
+                key=lambda x: max([len(p) for p in x[1].get("file_patterns", [""])], default=0),
+                reverse=True
+            )
+            
+            # Process each checklist item in order of specificity
+            for document_name, document_info in sorted_documents:
                 # Initialize result for this document
                 results[document_name] = {
                     "found": False,
@@ -387,43 +398,62 @@ class ChecklistCrossReferenceAgent:
                 
                 # Check if any of the submission files match this document
                 for file_data in submission_data:
-                    filename = file_data.get("filename", "")
+                    filename = file_data.get("filename", "").lower()  # Convert to lowercase for case-insensitive matching
                     file_type = file_data.get("file_type", "")
+                    
+                    # Skip files that have already been assigned to a document type
+                    if filename in assigned_files:
+                        continue
                     
                     # Check if the filename matches any of the patterns for this document
                     patterns = document_info.get("file_patterns", [])
+                    matched = False
+                    
                     for pattern in patterns:
-                        if re.search(pattern, filename, re.IGNORECASE):
-                            # Found a match
-                            results[document_name]["found"] = True
-                            results[document_name]["filename"] = filename
-                            results[document_name]["file_type"] = file_type
-                            
-                            # Check if the document is complete (has all required fields)
-                            required_fields = document_info.get("required_keywords", [])
-                            if required_fields:
-                                # Get the content of the file
-                                content = file_data.get("content", "")
-                                
-                                # Check each required field
-                                missing_fields = []
-                                for field in required_fields:
-                                    if not re.search(field, content, re.IGNORECASE):
-                                        missing_fields.append(field)
-                                
-                                if missing_fields:
-                                    results[document_name]["missing_fields"] = missing_fields
-                                else:
-                                    results[document_name]["complete"] = True
-                            else:
-                                # If no required fields are specified, consider it complete
-                                results[document_name]["complete"] = True
-                            
-                            # Break out of the pattern loop once a match is found
+                        pattern = pattern.lower()  # Convert pattern to lowercase for case-insensitive matching
+                        
+                        # Special case for FDA-1571 form - more flexible matching
+                        if document_name == "Form FDA-1571" and ("fda" in filename and "1571" in filename):
+                            matched = True
+                            break
+                        
+                        # For other documents, use more flexible pattern matching
+                        # Check if pattern is contained in the filename
+                        if pattern in filename:
+                            matched = True
                             break
                     
-                    # Break out of the file loop once a match is found
-                    if results[document_name]["found"]:
+                    if matched:
+                        # Found a match
+                        results[document_name]["found"] = True
+                        results[document_name]["filename"] = file_data.get("filename", "")
+                        results[document_name]["file_type"] = file_type
+                        
+                        # Mark this file as assigned to prevent it from matching multiple document types
+                        assigned_files[filename] = document_name
+                        
+                        # Check if the document is complete (has all required fields)
+                        required_fields = document_info.get("required_keywords", [])
+                        if required_fields:
+                            # Get the content of the file
+                            content = file_data.get("content", "").lower()  # Convert to lowercase for case-insensitive matching
+                            
+                            # Check each required field
+                            missing_fields = []
+                            for field in required_fields:
+                                field = field.lower()  # Convert field to lowercase for case-insensitive matching
+                                if field not in content:  # Simplified matching for required fields
+                                    missing_fields.append(field)
+                            
+                            if missing_fields:
+                                results[document_name]["missing_fields"] = missing_fields
+                            else:
+                                results[document_name]["complete"] = True
+                        else:
+                            # If no required fields are specified, consider it complete
+                            results[document_name]["complete"] = True
+                        
+                        # Break out of the file loop once a match is found
                         break
             
             return results
@@ -791,7 +821,7 @@ def main():
     # Tab 1: IND Assistant (Chat Interface)
     with tab1:
         st.title("📚 IND Assistant")
-        st.markdown("Ask questions about IND submissionrequirements and get detailed answers.")
+        st.markdown("Ask questions about IND submission requirements and get detailed answers.")
         
         # Add "Clear Chat History" button
         if st.button("Clear Chat History"):
