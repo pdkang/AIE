@@ -25,4 +25,6 @@ Submission Assessment Module:
 The solution leverages LlamaParse for document extraction, OpenAI's GPT-4 for intelligent responses, and implements caching for performance optimization. The architecture follows a modular design with shared utilities and a unified Streamlit interface.
 
 
+Slide Deck:
 
+https://docs.google.com/presentation/d/1cf995Dq4Uo9vBF-PboZyLg6s6BqS0dLa/edit?usp=sharing&ouid=113621364354334087624&rtpof=true&sd=true
